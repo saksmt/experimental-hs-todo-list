@@ -67,18 +67,7 @@ todoAppOptions = option str $
     <> showDefault
     <> value "/home/smt/.todos"
 
--- m a b =
-
 todoApp = info (((,) <$> todoAppCommands <*> todoAppOptions) <**> helper) $ fullDesc <> header "todos - simple cmd todo manager"
-
-
-testTodos = [
-    TodoItem "1" False,
-    TodoItem "2" True,
-    TodoItem "3" True,
-    TodoItem "4" False,
-    TodoItem "5" False
-    ]
 
 evalCommand (AddTodo text)        = addTodoA text
 evalCommand (EditTodo index text) = editTodoA index text
