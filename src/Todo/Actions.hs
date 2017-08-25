@@ -34,7 +34,7 @@ prettyPrintA showCompleted = withTodos $ \todos ->
     out << prettyPrint showCompleted todos
 
 checkIndex index = withTodos $ \todos ->
-    when (length todos <= index) $ throwError $ concat [
+    when (length todos < index) $ throwError $ concat [
         "No todo at index: ", show index, "\n",
         "Last todo has index: ", show $ length todos
         ]

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Todo.Pure(
     TodoItem(..),
     TodoList,
@@ -13,11 +15,17 @@ import Control.Monad.State(StateT)
 import Output(Out)
 import qualified Prelude as P
 import Prelude hiding (take, drop)
+import Data.Aeson (ToJSON, FromJSON)
+import GHC.Generics(Generic)
+
 
 data TodoItem = TodoItem {
     text :: String,
     done :: Bool
-} deriving (Eq, Show)
+} deriving (Eq, Show, Generic)
+
+instance ToJSON TodoItem
+instance FromJSON TodoItem
 
 type TodoList = [TodoItem]
 

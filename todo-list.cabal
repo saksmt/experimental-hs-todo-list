@@ -19,6 +19,9 @@ executable todo-list
   -- other-extensions:
   build-depends:        base >= 4.7 && < 5
                        ,mtl
-                       ,free
+                       ,optparse-applicative
+                       ,aeson
+                       ,directory
+                       ,bytestring
   hs-source-dirs:       src
   default-language:     Haskell2010
