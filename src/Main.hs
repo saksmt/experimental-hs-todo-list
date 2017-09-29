@@ -9,16 +9,20 @@ import Control.Monad.State
 import System.IO(hPutStrLn, stderr)
 import Data.ByteString.Lazy(readFile, writeFile, ByteString)
 import Control.Monad.Except
-import Output(toIOT, out, (<<), OutT)
-import Todo.Pure(TodoItem(..), TodoList)
-import Todo.Actions
 import Options.Applicative
 import Control.Monad((=<<), (>=>))
-import System.Directory(doesFileExist)
 import Data.Semigroup((<>))
 import Data.Aeson(encode, eitherDecode)
 
 import Prelude hiding (readFile, writeFile)
+
+import Todo.Type
+import Todo.Actions
+import Output(toIOT, out, (<<), OutT)
+import Todo.Store.Class
+import Todo.Store.ListStore
+import Todo.Store.JsonFileListStoreAccessor
+
 
 data CmdParams =
     AddTodo { text :: String } |
@@ -77,20 +81,16 @@ evalCommand (MarkUnDone index)    = markUnDoneA index
 evalCommand (ToggleDone index)    = toggleDoneA index
 evalCommand _                     = throwError "Unknown command: tell developer that he is the dick"
 
-readJsonText file = do
-    exists <- doesFileExist file
-    if exists then
-        readFile file
-    else
-        return "[]"
+runApp :: TodoAction TodoList TodoList -> TodoStoreIdentifier -> IO ()
+runApp action file = handleErrorsAndSave (db >>= execApp) where
+    saveResults = either (hPutStrLn stderr) (save file =<<)
+    handleErrorsAndSave = saveResults . runExcept . toIOT
+    execApp = evalStateT action
+    db = loadDb file
+    loadDb :: String -> IO (Except String TodoList)
+    loadDb = load
 
-writeJson file value = writeFile file $ encode value
-
-parseJson value = either throwError return $ eitherDecode value
-
-runApp action file = db >>= ioAction
-    where saveResults = either (hPutStrLn stderr) (writeJson file =<<)
-          ioAction = saveResults . runExcept . toIOT . (parseJson >=> evalStateT action)
-          db = readJsonText file
-
-main = execParser todoApp >>= uncurry (runApp . evalCommand)
+main = execParser todoApp >>= uncurry (runApp . evalJsonArrayBasedCommand)
+    where
+        evalJsonArrayBasedCommand :: CmdParams -> TodoAction TodoList TodoList
+        evalJsonArrayBasedCommand = evalCommand

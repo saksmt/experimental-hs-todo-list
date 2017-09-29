@@ -15,7 +15,17 @@ cabal-version:        >=1.10
 
 executable todo-list
   main-is:              Main.hs
-  other-modules:        Output, Output.Channel, Output.MonadOutput, Output.Out, Output.Stream, Todo.Actions, Todo.Pure
+  other-modules:        Output
+                      , Output.Channel
+                      , Output.MonadOutput
+                      , Output.Out
+                      , Output.Stream
+                      , Todo.Actions
+                      , Todo.Pure
+                      , Todo.Type
+                      , Todo.Store.Class
+                      , Todo.Store.JsonFileListStoreAccessor
+                      , Todo.Store.ListStore
   -- other-extensions:
   build-depends:        base >= 4.7 && < 5
                        ,mtl
