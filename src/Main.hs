@@ -10,11 +10,8 @@ import System.IO(hPutStrLn, stderr)
 import Data.ByteString.Lazy(readFile, writeFile, ByteString)
 import Control.Monad.Except
 import Options.Applicative
-import Control.Monad((=<<), (>=>))
+import Control.Monad((=<<))
 import Data.Semigroup((<>))
-import Data.Aeson(encode, eitherDecode)
-
-import Prelude hiding (readFile, writeFile)
 
 import Todo.Type
 import Todo.Actions
@@ -81,16 +78,12 @@ evalCommand (MarkUnDone index)    = markUnDoneA index
 evalCommand (ToggleDone index)    = toggleDoneA index
 evalCommand _                     = throwError "Unknown command: tell developer that he is the dick"
 
-runApp :: TodoAction TodoList TodoList -> TodoStoreIdentifier -> IO ()
-runApp action file = handleErrorsAndSave (db >>= execApp) where
-    saveResults = either (hPutStrLn stderr) (save file =<<)
-    handleErrorsAndSave = saveResults . runExcept . toIOT
-    execApp = evalStateT action
-    db = loadDb file
-    loadDb :: String -> IO (Except String TodoList)
-    loadDb = load
+type CurrentTodoStore = TodoList
 
-main = execParser todoApp >>= uncurry (runApp . evalJsonArrayBasedCommand)
-    where
-        evalJsonArrayBasedCommand :: CmdParams -> TodoAction TodoList TodoList
-        evalJsonArrayBasedCommand = evalCommand
+runApp :: TodoAction CurrentTodoStore CurrentTodoStore -> TodoStoreIdentifier -> IO ()
+runApp action file = db >>= (handleErrorsAndSave . execApp)
+    where handleErrorsAndSave = either (hPutStrLn stderr) (save file =<<)
+          execApp = runExcept . join . fmap (toIOT . evalStateT action)
+          db = load file
+
+main = execParser todoApp >>= uncurry (runApp . evalCommand)
