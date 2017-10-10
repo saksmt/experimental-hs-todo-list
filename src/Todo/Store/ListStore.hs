@@ -1,10 +1,15 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Todo.Store.ListStore where
 
 import Prelude hiding (take, drop)
 import qualified Prelude as P
+
+import Control.Monad.State
 
 import Todo.Store.Class
 import Todo.Type
@@ -18,10 +23,9 @@ _modifyAt todoList humanIndex f = todoList `take` index ++ [newItem] ++ todoList
         index = humanIndex - 1
         newItem = f $ todoList !! index
 
-instance TodoStore TodoList where
-    store `atIndex` idx = store !! idx
-    listAll store = store
-    listIncomplete = filter (not . done)
-    modifyAt = _modifyAt
-    store `add` value = store ++ [value]
-    hasIndex store idx = length store >= idx
+instance (Monad m, MonadState TodoList m) => TodoStore m where
+    atIndex idx = (!! idx) <$> get
+    listAll = get
+    modifyAt idx f = modify $ \x -> _modifyAt x idx f
+    add value = modify $ \x -> x ++ [value]
+    hasIndex idx = (<= idx) . length <$> get

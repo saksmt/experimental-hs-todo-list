@@ -24,6 +24,7 @@ executable todo-list
                       , Todo.Pure
                       , Todo.Type
                       , Todo.Store.Class
+                      , Todo.Store.Instances
                       , Todo.Store.JsonFileListStoreAccessor
                       , Todo.Store.ListStore
   -- other-extensions:
